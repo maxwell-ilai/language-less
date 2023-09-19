@@ -1,0 +1,25 @@
+{
+  "name": "language-less",
+  "displayName": "Language Less",
+  "description": "Less Language Support",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "less",
+      "aliases": ["Less", "less"],
+      "extensions": [".less"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "less",
+      "scopeName": "source.css.less",
+      "path": "./syntaxes/less.tmLanguage.json"
+    }]
+  }
+}

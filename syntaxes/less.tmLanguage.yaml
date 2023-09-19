@@ -1,0 +1,979 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json
+name: Less
+patterns:
+  - include: '#variable-setting'
+  - include: '#comment-block'
+  - include: '#comment-line'
+  - include: '#combinators'
+  - include: '#selectors'
+  - include: '#flow_control'
+  - include: '#at-rules'
+  - include: '#rule-list'
+repository:
+  at-rules:
+    patterns:
+      - begin: \A(?i:(?=\s*@charset\b))
+        end: ;|(?=$)
+        endCaptures:
+          '0':
+            name: punctuation.terminator.rule.less
+        name: meta.at-rule.charset.less
+        patterns:
+          - captures:
+              '1':
+                name: keyword.control.at-rule.charset.less
+              '2':
+                name: punctuation.definition.keyword.less
+            match: ((@)charset)(?=\s)
+          - begin: '"'
+            beginCaptures:
+              '0':
+                name: punctuation.definition.string.begin.less
+            end: '"|$'
+            endCaptures:
+              '0':
+                name: punctuation.definition.string.end.less
+            name: string.quoted.double.less
+            patterns:
+              - begin: (?:\G|^)(?=(?:[^"])+$)
+                end: $
+                name: invalid.illegal.unclosed.string.css
+      - begin: (?i)((@)font-face)(?=\s*|{|/\*|$)
+        beginCaptures:
+          '1':
+            name: keyword.control.at-rule.font-face.less
+          '2':
+            name: punctuation.definition.keyword.less
+        end: (?!\G)
+        name: meta.at-rule.font-face.less
+        patterns:
+          - include: '#comment-block'
+          - include: '#escapes'
+          - include: '#rule-list'
+      - begin: (?i)((@)import)(?:\s+|$|(?=['"]|\(|/\*))
+        beginCaptures:
+          '1':
+            name: keyword.control.at-rule.import.less
+          '2':
+            name: punctuation.definition.keyword.less
+        end: ;
+        endCaptures:
+          '0':
+            name: punctuation.terminator.rule.less
+        name: meta.at-rule.import.less
+        patterns:
+          - begin: (?<=@import\s*)\(
+            beginCaptures:
+              '0':
+                name: punctuation.definition.begin.bracket.round.less
+            end: \)
+            endCaptures:
+              '0':
+                name: punctuation.definition.end.bracket.round.less
+            patterns:
+              - match: \b(reference|inline|less|css|once|multiple|optional)\b
+                name: keyword.other.import.option.less
+              - match: ','
+                name: punctuation.separator.delimiter.less
+          - begin: \G\s*(?=/\*)
+            end: (?<=\*/)\s*
+            patterns:
+              - include: '#comment-block'
+          - include: '#variable'
+          - include: '#string'
+          - include: '#url'
+      - begin: (?<=^|\s)(@)(?:-(?:webkit|moz)-)?keyframes\b
+        beginCaptures:
+          '0':
+            name: keyword.control.at-rule.keyframes.less
+          '1':
+            name: punctuation.definition.keyword.less
+        end: (?<=})
+        name: meta.at-rule.keyframes.less
+        patterns:
+          - match: (?<=@keyframes)\s+((?:[_A-Za-z][-\w]|-[_A-Za-z])[-\w]*)
+            captures:
+              '1':
+                name: entity.name.function.less
+          - begin: (?<=@keyframes)\s+(")
+            beginCaptures:
+              '1':
+                name: punctuation.definition.string.begin.less
+            end: '"'
+            endCaptures:
+              '0':
+                name: punctuation.definition.string.end.less
+            name: string.quoted.double.less
+            contentName: entity.name.function.less
+            patterns:
+              - match: \\(\h{1,6}|.)
+                name: constant.character.escape.less
+              - include: '#interpolation'
+          - begin: (?<=@keyframes)\s+(')
+            beginCaptures:
+              '1':
+                name: punctuation.definition.string.begin.less
+            end: ''''
+            endCaptures:
+              '0':
+                name: punctuation.definition.string.end.less
+            name: string.quoted.single.less
+            contentName: entity.name.function.less
+            patterns:
+              - match: \\(\h{1,6}|.)
+                name: constant.character.escape.less
+              - include: '#interpolation'
+          - begin: '{'
+            beginCaptures:
+              '0':
+                name: punctuation.section.keyframes.begin.less
+            end: '}'
+            endCaptures:
+              '0':
+                name: punctuation.section.keyframes.end.less
+            patterns:
+              - captures:
+                  '1':
+                    name: entity.other.keyframe-offset.css
+                  '2':
+                    name: entity.other.keyframe-offset.percentage.css
+                match: >-
+                  (?xi)
+
+                  (?<![\w-]) (from|to) (?![\w-])      # Keywords for 0% |
+                  100%
+
+                  |
+
+                  ([-+]?(?:\d+(?:\.\d+)?|\.\d+)%)     # Percentile value
+              - include: '#flow_control'
+              - include: '#interpolation'
+              - include: '#rule-list'
+              - include: '#rules'
+      - begin: ^\s*((@)media)\b
+        beginCaptures:
+          '1':
+            name: keyword.control.at-rule.media.less
+          '2':
+            name: punctuation.definition.keyword.less
+        end: \s*(?={)
+        name: meta.at-rule.media.less
+        patterns:
+          - include: '#comment-block'
+          - include: '#comment-line'
+          - match: \b(only)\b
+            name: keyword.control.operator.css.less
+          - begin: \(
+            beginCaptures:
+              '0':
+                name: punctuation.definition.media-query.begin.bracket.round.less
+            end: \)
+            endCaptures:
+              '0':
+                name: punctuation.definition.media-query.end.bracket.round.less
+            name: meta.property-list.media-query.less
+            patterns:
+              - begin: (?<![-a-z])(?=[-a-z])
+                end: $|(?![-a-z])
+                name: meta.property-name.media-query.less
+                patterns:
+                  - include: source.css#media-features
+                  - include: source.css#property-names
+              - begin: (:)\s*(?!(\s*{))
+                beginCaptures:
+                  '1':
+                    name: punctuation.separator.key-value.less
+                end: \s*(;|(?=}|\)))
+                endCaptures:
+                  '1':
+                    name: punctuation.terminator.rule.less
+                contentName: meta.property-value.media-query.less
+                patterns:
+                  - include: '#general'
+                  - include: '#property-values'
+          - include: '#variable'
+          - include: '#conditional_operators'
+          - include: source.css#media-types
+      - begin: (?i)((@)namespace)(?=[\s'";]|/\*|$)
+        beginCaptures:
+          '1':
+            name: keyword.control.at-rule.namespace.less
+          '2':
+            name: punctuation.definition.keyword.less
+        end: ;|(?=[@{])
+        endCaptures:
+          '0':
+            name: punctuation.terminator.rule.less
+        name: meta.at-rule.namespace.less
+        patterns:
+          - include: '#url'
+          - captures:
+              '1':
+                patterns:
+                  - include: '#comment-block'
+              '2':
+                name: entity.name.function.namespace-prefix.css
+                patterns:
+                  - include: '#escapes'
+            match: >-
+              (?xi)
+
+              (?:\G|^|(?<=\s))
+
+              (?=
+                (?<=\s|^)                            # Starts with whitespace
+                (?:[-a-zA-Z_]|[^\x00-\x7F])          # Then a valid identifier character
+                |
+                \s*                                  # Possible adjoining whitespace
+                /\*(?:[^*]|\*[^/])*\*/               # Injected comment
+              )
+
+              (.*?)                                  # Grouped to embed
+              #comment-block
+
+              (
+                (?:[-a-zA-Z_]    | [^\x00-\x7F])     # First letter
+                (?:[-a-zA-Z0-9_] | [^\x00-\x7F]      # Remainder of identifier
+                  |\\(?:[0-9a-fA-F]{1,6}|.)
+                )*
+              )
+          - include: '#comment-block'
+          - include: '#escapes'
+          - include: '#string'
+      - begin: ^\s*((@)page)(?=:|\s)\s*([-:\w]*)
+        captures:
+          '1':
+            name: keyword.control.at-rule.page.less
+          '2':
+            name: punctuation.definition.keyword.less
+          '3':
+            name: entity.name.function.less
+        end: \s*(?={)
+        name: meta.at-rule.page.less
+      - begin: ((@)plugin)(?:\s+|$|(?=['"]))
+        beginCaptures:
+          '1':
+            name: keyword.control.at-rule.plugin.less
+          '2':
+            name: punctuation.definition.keyword.less
+        end: ;
+        endCaptures:
+          '0':
+            name: punctuation.terminator.rule.less
+        name: meta.at-rule.plugin.less
+        patterns:
+          - include: '#string'
+      - begin: (?i)(?=@supports(\s|\(|/\*|$))
+        end: (?<=})(?!\G)|(?=;)
+        name: meta.at-rule.supports.less
+        patterns:
+          - begin: (?i)\G(@)supports
+            beginCaptures:
+              '0':
+                name: keyword.control.at-rule.supports.less
+              '1':
+                name: punctuation.definition.keyword.less
+            end: (?=\s*[{;])
+            name: meta.at-rule.supports.header.less
+            patterns:
+              - include: 'source.css#feature-query-operators'
+              - include: 'source.css#feature-query'
+              - include: '#comment-block'
+              - include: '#escapes'
+          - begin: '{'
+            beginCaptures:
+              '0':
+                name: punctuation.section.supports.begin.bracket.curly.less
+            end: '}'
+            endCaptures:
+              '0':
+                name: punctuation.section.supports.end.bracket.curly.less
+            name: meta.at-rule.supports.body.less
+            patterns:
+              - include: $self
+  combinators:
+    patterns:
+      - match: /deep/|>>>
+        name: invalid.deprecated.combinator.less
+      - match: '>>|>|\+_?|~'
+        name: keyword.operator.combinator.less
+  commas:
+    match: ','
+    name: punctuation.separator.list.comma.less
+  comment-block:
+    begin: /\*
+    beginCaptures:
+      '0':
+        name: punctuation.definition.comment.less
+    end: \*/
+    endCaptures:
+      '0':
+        name: punctuation.definition.comment.less
+    name: comment.block.less
+  comment-line:
+    begin: //
+    beginCaptures:
+      '0':
+        name: punctuation.definition.comment.less
+    end: \n
+    name: comment.line.less
+  constant_boolean:
+    match: \b(true|false)\b
+    name: support.constant.boolean.less
+  functions:
+    begin: (?i)(?<![\w-])([\w-]+)(\()
+    beginCaptures:
+      '1':
+        name: support.function.misc.less
+      '2':
+        name: punctuation.section.function.less
+    end: (\))
+    endCaptures:
+      '1':
+        name: punctuation.section.function.less
+    name: meta.function.misc.less
+    patterns:
+      - include: '#parameters'
+  constant_important:
+    match: '!important'
+    name: keyword.other.important.less
+  constant_less_functions:
+    begin: >-
+      (if|boolean|escape|e|\%|replace|length|extract|range|each|ceil|floor|percentage|round|sqrt|abs|sin|asin|cos|acos|tan|atan|pi|pow|mod|min|max|is(?:number|string|color|keyword|url|pixel|em|percentage|unit|ruleset|defined)|color|image-(?:size|width|height)|convert|data-uri|default|unit|get-unit|svg-gradient|rgba?|argb|hsla?|hsva?|hue|saturation|lightness|hsvhue|hsvsaturation|hsvvalue|red|green|blue|alpha|luma|luminance|saturate|desaturate|lighten|darken|fadein|fadeout|fade|spin|mix|tint|shade|greyscale|contrast|multiply|screen|overlay|softlight|hardlight|difference|exclusion|average|negation)(\()
+    beginCaptures:
+      '1':
+        name: support.function.misc.less
+      '2':
+        name: punctuation.section.function.less
+    end: (\))
+    endCaptures:
+      '1':
+        name: punctuation.section.function.less
+    patterns:
+      - include: '#parameters'
+  escapes:
+    patterns:
+      - match: \\[0-9a-fA-F]{1,6}
+        name: constant.character.escape.codepoint.css
+      - begin: \\$\s*
+        end: ^(?<!\G)
+        name: constant.character.escape.newline.css
+      - match: \\.
+        name: constant.character.escape.css
+  flow_control:
+    patterns:
+      - include: '#rule_mixin'
+      - include: '#rule_if'
+      - include: '#rule_when'
+      - include: '#rule_each'
+  function_attributes:
+    patterns:
+      - match: ':'
+        name: punctuation.separator.key-value.less
+      - include: '#general'
+      - include: '#property-values'
+      - match: '[={}\?;@]'
+        name: invalid.illegal.less
+  general:
+    patterns:
+      - include: '#variable'
+      - include: '#comment-block'
+      - include: '#comment-line'
+  interpolation:
+    match: '(@{)([-a-zA-Z_][-a-zA-Z0-9_]*)(})'
+    captures:
+      '1':
+        name: punctuation.definition.interpolation.begin.bracket.curly.less
+      '3':
+        name: punctuation.definition.interpolation.end.bracket.curly.less
+    name: variable.other.interpolation.less
+  conditional_operators:
+    patterns:
+      - include: '#comparison_operators'
+      - include: '#logical_operators'
+  comparison_operators:
+    match: '==|!=|<=|>=|=|<|>'
+    name: keyword.operator.comparison.less
+  logical_operators:
+    match: \b(not|or|and)\b
+    name: keyword.operator.logical.less
+  map:
+    begin: \{
+    beginCaptures:
+      '0':
+        name: punctuation.definition.map.begin.bracket.curly.less
+    end: \}
+    endCaptures:
+      '0':
+        name: punctuation.definition.map.end.bracket.curly.less
+    name: meta.definition.variable.map.less
+    patterns:
+      - include: '#comment-block'
+      - include: '#comment-line'
+      - match: \b([\w-]+)\s*(:)
+        captures:
+          '1':
+            name: support.type.map.key.less
+          '2':
+            name: punctuation.separator.key-value.less
+      - match: ';'
+        name: punctuation.separator.delimiter.less
+      - include: '#map'
+      - include: '#variable'
+      - include: '#property-values'
+  operators:
+    match: '[*/]|(?<=\s|^)[-+](?=\s|$)'
+    name: keyword.operator.arithmetic.css
+  parameters:
+    patterns:
+      - include: '#conditional_operators'
+      - include: '#operators'
+      - include: '#variable'
+      - begin: \(
+        beginCaptures:
+          '0':
+            name: punctuation.definition.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.end.bracket.round.less
+        patterns:
+          - include: '#function_attributes'
+      - include: '#property-values'
+      - include: '#comment-block'
+      - match: '[^''",)\s]+'
+        name: variable.parameter.url.less
+      - match: ','
+        name: punctuation.separator.delimiter.less
+  rule-list:
+    begin: '{'
+    beginCaptures:
+      '0':
+        name: punctuation.section.property-list.begin.bracket.curly.less
+    end: '}'
+    endCaptures:
+      '0':
+        name: punctuation.section.property-list.end.bracket.curly.less
+    name: meta.property-list.less
+    patterns:
+      - include: '#rule-list-innards'
+  rule-list-innards:
+    patterns:
+      - include: '#variable-setting'
+      - include: '#comment-block'
+      - include: '#comment-line'
+      - include: '#escapes'
+      - match: |-
+          (?x) (?<![\w-])
+          --
+          (?:[-a-zA-Z_]    | [^\x00-\x7F])     # First letter
+          (?:[-a-zA-Z0-9_] | [^\x00-\x7F]      # Remainder of identifier
+            |\\(?:[0-9a-fA-F]{1,6}|.)
+          )*
+        name: variable.css
+      - begin: (?<![-a-zA-Z])(?=[-a-zA-Z])
+        end: $|(?![-a-zA-Z])
+        name: meta.property-name.less
+        patterns:
+          - include: 'source.css#property-names'
+      - begin: (:)\s*
+        beginCaptures:
+          '1':
+            name: punctuation.separator.key-value.less
+        end: \s*(;)|\s*(?=}|\))
+        endCaptures:
+          '1':
+            name: punctuation.terminator.rule.less
+        contentName: meta.property-value.less
+        patterns:
+          - include: '#comment-block'
+          - include: '#property-values'
+      - match: ;
+        name: punctuation.terminator.rule.less
+      - include: '$self'
+  property-values:
+    patterns:
+      - include: '#commas'
+      - include: '#comment-block'
+      - include: '#escapes'
+      - include: '#string'
+      - include: '#flow_control'
+      - include: '#functions'
+      - include: '#constant_less_functions'
+      - include: '#constant_important'
+      - include: '#constant_boolean'
+      - include: source.css#numeric-values
+      - include: source.css#property-keywords
+      - include: source.css#color-keywords
+      - include: source.css#property-names
+      - include: '#operators'
+      - begin: \(
+        beginCaptures:
+          '0':
+            name: punctuation.definition.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.end.bracket.round.less
+        patterns:
+          - include: '#conditional_operators'
+          - include: '#general'
+          - include: '#property-values'
+  rule_each:
+    begin: \s*(each)(\()
+    beginCaptures:
+      '1':
+          name: keyword.control.rule.each.less
+      '2':
+        name: punctuation.definition.begin.bracket.round.less
+    end: \s*(\))
+    endCaptures:
+      '1':
+        name: punctuation.definition.end.bracket.round.less
+    name: meta.rule.each.less
+    patterns:
+      - include: '#variables'
+      - match: ','
+        name: punctuation.separator.delimiter.less
+      - begin: ([.#]\()
+        beginCaptures:
+          '0':
+            name: punctuation.definition.anon-mixin.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.anon-mixin.end.bracket.round.less
+        patterns:
+          - include: '#variables'
+          - match: ','
+            name: punctuation.separator.delimiter.less
+      - include: '#property-values'
+      - include: '#rule-list'
+  rule_if:
+    begin: \b(if)(\()
+    beginCaptures:
+      '1':
+          name: keyword.control.rule.if.less
+      '2':
+        name: punctuation.definition.if.begin.bracket.round.less
+    end: \s*(\))
+    endCaptures:
+      '1':
+        name: punctuation.definition.if.end.bracket.round.less
+    name: meta.rule.if.less
+    patterns:
+      - include: '#conditional_operators'
+      - include: '#variable'
+      - include: '#property-values'
+      - match: '[^''"),\s]+'
+        name: variable.other.misc.less
+      - match: ','
+        name: punctuation.separator.delimiter.less
+  rule_mixin:
+    patterns:
+      - begin: ([.#][\w-]+[.#\w-]*)(\()
+        beginCaptures:
+          '1':
+            name: entity.name.function.less
+          '2':
+            name: punctuation.definition.mixin.begin.bracket.round.less
+        end: (\))
+        endCaptures:
+          '1':
+            name: punctuation.definition.mixin.end.bracket.round.less
+        name: meta.rule.mixin.less
+        patterns:
+          - include: '#variable'
+          - include: '#property-values'
+          - begin: (:)
+            beginCaptures:
+              '1':
+                name: punctuation.separator.key-value.less
+            end: \s*((?=,|;|\)))
+            contentName: meta.parameter-value.less
+            patterns:
+              - include: '#property-values'
+          - match: ';'
+            name: punctuation.terminator.rule.less
+          - match: ','
+            name: punctuation.separator.delimiter.less
+          - match: \.\.\.
+            name: keyword.other.rest.less
+      - begin: ([.#][\w-]+[.#\w-]*)(\[)
+        beginCaptures:
+          '1':
+            name: entity.name.function.less
+          '2':
+            name: punctuation.definition.map.begin.bracket.square.less
+        end: \]
+        endCaptures:
+          '0':
+            name: punctuation.definition.map.end.bracket.square.less
+        name: meta.rule.mixin.map.less
+        patterns:
+          - include: '#variable'
+          - match: '[^''"\],\s]+'
+            name: variable.parameter.map.less
+      - match: ([.#][\w-]+[.#\w-]*)(?=;)
+        name: entity.name.function.less
+  rule_when:
+    begin: \b(when\b)\s*
+    beginCaptures:
+      '1':
+        name: keyword.control.rule.when.less
+    end: (?=\s*{)
+    name: meta.rule.when.less
+    patterns:
+      - include: '#logical_operators'
+      - begin: \(
+        beginCaptures:
+          '0':
+            name: punctuation.definition.condition.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.condition.end.bracket.round.less
+        patterns:
+          - include: '#conditional_operators'
+          - include: '#variable'
+          - include: '#property-values'
+          - match: '[^''"),\s]+'
+            name: variable.other.misc.less
+      - match: ','
+        name: punctuation.separator.delimiter.less
+  rules:
+    patterns:
+      - include: '#general'
+      - include: '#rule_mixin'
+      - include: '#combinators'
+      - include: '#selectors'
+  selector_attribute:
+    match: |-
+      (?xi)
+      (\[)
+      \s*
+      (
+        (?:
+          [-a-zA-Z_0-9]|[^\x00-\x7F]       # Valid identifier characters
+          | \\(?:[0-9a-fA-F]{1,6}|.)       # Escape sequence
+          | \@\{                           # Interpolation (escaped to avoid Coffeelint errors)
+          | \.?\@                          # Possible start of interpolation variable
+          | }                              # Possible end of interpolation
+        )+?
+      )
+      (?:
+        \s*([~|^$*]?=)\s*
+        (?:
+          (
+            (?:
+              [-a-zA-Z_0-9]|[^\x00-\x7F]   # Valid identifier characters
+              | \\(?:[0-9a-fA-F]{1,6}|.)   # Escape sequence
+              | \@\{                       # Interpolation (escaped to avoid Coffeelint errors)
+              | \.?\@                      # Possible start of interpolation variable
+              | }                          # Possible end of interpolation
+            )+
+          )
+          |
+          ((")(.*?)("))
+          |
+          ((')(.*?)('))
+        )
+      )?
+      \s*
+      (\])
+    name: meta.attribute-selector.less
+    captures:
+      '1':
+        name: punctuation.definition.attribute-selector.begin.bracket.square.less
+      '2':
+        name: entity.other.attribute-name.attribute.less
+        patterns:
+          - include: '#interpolation'
+          - match: \\([0-9a-fA-F]{1,6}|.)
+            name: constant.character.escape.less
+          - match: \$|}
+            name: invalid.illegal.less
+      '3':
+        name: keyword.operator.less
+      '4':
+        name: string.unquoted.attribute-value.less
+        patterns:
+          - include: '#interpolation'
+          - match: \\([0-9a-fA-F]{1,6}|.)
+            name: constant.character.escape.less
+          - match: \$|}
+            name: invalid.illegal.less
+      '5':
+        name: string.quoted.double.attribute-value.less
+      '6':
+        name: punctuation.definition.string.begin.less
+      '7':
+        patterns:
+          - include: '#interpolation'
+          - match: \\([0-9a-fA-F]{1,6}|.)
+            name: constant.character.escape.less
+          - match: \$|}
+            name: invalid.illegal.less
+      '8':
+        name: punctuation.definition.string.end.less
+      '9':
+        name: string.quoted.single.attribute-value.less
+      '10':
+        name: punctuation.definition.string.begin.less
+      '11':
+        patterns:
+          - include: '#interpolation'
+          - match: \\([0-9a-fA-F]{1,6}|.)
+            name: constant.character.escape.less
+          - match: \$|}
+            name: invalid.illegal.less
+      '12':
+        name: punctuation.definition.string.end.less
+      '13':
+        name: punctuation.definition.attribute-selector.end.bracket.square.less
+  selector_class:
+    match: |-
+      (?x)
+      (\.)                                 # Valid class-name
+      (
+        (?: [-a-zA-Z_0-9]|[^\x00-\x7F]     # Valid identifier characters
+          | \\(?:[0-9a-fA-F]{1,6}|.)       # Escape sequence
+          | \@\{                           # Interpolation (escaped to avoid Coffeelint errors)
+          | \.?\@                          # Possible start of interpolation variable
+          | }                              # Possible end of interpolation
+        )+
+      )                                    # Followed by either:
+      (?= $                                # - End of the line
+        | [\s,\#)\[:{>+~|]                 # - Another selector
+        | \.[^$]                           # - Class selector, negating module variable
+        | /\*                              # - A block comment
+        | ;                                # - A semicolon
+      )
+    name: entity.other.attribute-name.class.css
+    captures:
+      '1':
+        name: punctuation.definition.entity.css
+      '2':
+        patterns:
+          - include: '#interpolation'
+          - match: \\([0-9a-fA-F]{1,6}|.)
+            name: constant.character.escape.less
+          - match: \$|}
+            name: invalid.illegal.less
+  selector_custom:
+    match: >-
+      \b([a-zA-Z0-9]+(-[a-zA-Z0-9]+)+)(?=\.|\s++[^:]|\s*[,\[{]|:(link|visited|hover|active|focus|target|lang|disabled|enabled|checked|indeterminate|root|nth-(child|last-child|of-type|last-of-type)|first-child|last-child|first-of-type|last-of-type|only-child|only-of-type|empty|not|valid|invalid)(\([0-9A-Za-z]*\))?)
+    name: entity.name.tag.custom.less
+  selector_id:
+    match: |-
+      (?x)
+      (\#)                                 # Valid id-name
+      (
+        (?: [-a-zA-Z_0-9]|[^\x00-\x7F]     # Valid identifier characters
+          | \\(?:[0-9a-fA-F]{1,6}|.)       # Escape sequence
+          | \@\{                           # Interpolation (escaped to avoid Coffeelint errors)
+          | \.?\@                          # Possible start of interpolation variable
+          | }                              # Possible end of interpolation
+        )+
+      )                                    # Followed by either:
+      (?= $                                # - End of the line
+        | [\s,\#)\[:{>+~|]                 # - Another selector
+        | \.[^$]                           # - Class selector, negating module variable
+        | /\*                              # - A block comment
+      )
+    name: entity.other.attribute-name.id.css
+    captures:
+      '1':
+        name: punctuation.definition.entity.css
+      '2':
+        patterns:
+          - include: '#interpolation'
+          - match: \\([0-9a-fA-F]{1,6}|.)
+            name: constant.character.escape.less
+          - match: \$|}
+            name: invalid.illegal.identifier.less
+  parent_selector_suffix:
+    match: |-
+      (?x)
+      (?<=&)
+      (
+        (?: [-a-zA-Z_0-9]|[^\x00-\x7F]     # Valid identifier characters
+          | \\(?:[0-9a-fA-F]{1,6}|.)       # Escape sequence
+          | \@\{                           # Interpolation (escaped to avoid Coffeelint errors)
+          | \@                             # Possible start of interpolation variable
+          | }                              # Possible end of interpolation
+        )+
+      )                                    # Followed by either:
+      (?= $                                # - End of the line
+        | [\s,.\#)\[:{>+~|]                # - Another selector
+        | /\*                              # - A block comment
+      )
+    name: entity.other.attribute-name.parent-selector-suffix.css
+    captures:
+      '1':
+        name: punctuation.definition.entity.css
+      '2':
+        patterns:
+          - include: '#interpolation'
+          - match: \\([0-9a-fA-F]{1,6}|.)
+            name: constant.character.escape.less
+          - match: \$|}
+            name: invalid.illegal.identifier.less
+  selector_pseudo_class:
+    patterns:
+      - begin: ((:)\bextend)(\()
+        beginCaptures:
+          '1':
+            name: keyword.control.extend.less
+          '2':
+            name: punctuation.definition.entity.less
+          '3':
+            name: punctuation.definition.extend.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.extend.end.bracket.round.less
+        patterns:
+          - match: \b(all)\b
+            name: keyword.other.extend-all.less
+          - include: '#combinators'
+          - include: '#selectors'
+          - include: '#commas'
+          - include: '#variable'
+      - begin: ((:)\bnth-(?:child|last-child|of-type|last-of-type))(\()
+        beginCaptures:
+          '1':
+            name: entity.other.attribute-name.pseudo-class.css
+          '2':
+            name: punctuation.definition.entity.css
+          '3':
+            name: punctuation.definition.pseudo-class.begin.bracket.round.css
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.pseudo-class.end.bracket.round.css
+        patterns:
+          - include: '#interpolation'
+          - match: \d+
+            name: constant.numeric.css
+          - match: (?<=\d)n\b|\b(n|even|odd)\b
+            name: constant.other.less
+          - match: \w+
+            name: invalid.illegal.less
+      - include: source.css#pseudo-classes
+      - include: source.css#pseudo-elements
+      - include: source.css#functional-pseudo-classes
+  selectors:
+    patterns:
+      - include: source.css#tag-names
+      - include: '#selector_custom'
+      - include: '#selector_class'
+      - include: '#selector_id'
+      - include: '#selector_pseudo_class'
+      - match: \*
+        name: entity.name.tag.wildcard.less
+      - match: '&'
+        name: entity.name.tag.reference.less
+      - match: '\|'
+        name: entity.name.tag.namespace-separator.less
+      - include: source.css#pseudo-elements
+      - include: '#selector_attribute'
+      - include: '#parent_selector_suffix'
+  string:
+    patterns:
+      - match: (~)(?=['"])
+        name: support.function.unquote.less
+      - begin: '"'
+        beginCaptures:
+          '0':
+            name: punctuation.definition.string.begin.css
+        end: '"'
+        endCaptures:
+          '0':
+            name: punctuation.definition.string.end.css
+        name: string.quoted.double.css
+        patterns:
+          - match: \\([0-9A-Fa-f]{1,6}|.)
+            name: constant.character.escape.css
+          - include: '#interpolation'
+      - begin: "'"
+        beginCaptures:
+          '0':
+            name: punctuation.definition.string.begin.css
+        end: "'"
+        endCaptures:
+          '0':
+            name: punctuation.definition.string.end.css
+        name: string.quoted.single.css
+        patterns:
+          - match: \\([0-9A-Fa-f]{1,6}|.)
+            name: constant.character.escape.css
+          - include: '#interpolation'
+  variable:
+    patterns:
+      - include: '#variables'
+      - include: '#interpolation'
+  variable-setting:
+    begin: (?=@(?!page)[\w-]+\s*:)
+    end: (?<=})|(;)
+    endCaptures:
+      '1':
+        name: punctuation.terminator.rule.less
+    patterns:
+      - match: (@[\w-]+)(?=\s*:)
+        name: variable.other.less
+      - begin: ':'
+        beginCaptures:
+          '0':
+            name: punctuation.separator.key-value.less
+        end: (?<=})|(?=;)
+        patterns:
+          - match: ([.#](?![0-9])[\w-]+[.#\w-]*)(?![.#\w-])
+            name: string.unquoted.less
+          - include: '#comment-block'
+          - include: '#comment-line'
+          - include: '#map'
+          - include: '#property-values'
+          - include: '#variable'
+          - match: '[^''",;\s]+'
+            name: string.unquoted.less
+  variables:
+    patterns:
+      - begin: (@[-a-zA-Z_][-a-zA-Z0-9_]*)(\[)
+        beginCaptures:
+          '1':
+            name: variable.other.less
+          '2':
+            name: punctuation.definition.map.begin.bracket.square.less
+        end: \]
+        endCaptures:
+          '0':
+            name: punctuation.definition.map.end.bracket.square.less
+        name: meta.definition.variable.map.less
+        patterns:
+          - include: '#variables'
+          - match: '[^''",\]\s]+'
+            name: variable.parameter.map.less
+      - match: (@@?[-a-zA-Z_][-a-zA-Z0-9_]*)
+        name: variable.other.less
+      - match: (\$[-a-zA-Z_][-a-zA-Z0-9_]*)
+        name: variable.less
+  url:
+    begin: (?i)(?<![\w@-])(url)(\()
+    beginCaptures:
+      '1':
+        name: support.function.url.less
+      '2':
+        name: punctuation.section.function.begin.bracket.round.less
+    end: \)
+    endCaptures:
+      '0':
+        name: punctuation.section.function.end.bracket.round.less
+    name: meta.function.url.less
+    patterns:
+      - match: '[^''")\s]+'
+        name: variable.parameter.url.less
+      - include: '#string'
+      - include: '#comment-block'
+      - include: '#escapes'
+scopeName: source.css.less
