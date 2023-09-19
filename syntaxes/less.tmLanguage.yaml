@@ -5,7 +5,7 @@ patterns:
   - include: '#comment-block'
   - include: '#comment-line'
   - include: '#combinators'
-  - include: '#selectors'
+  - include: '#selector'
   - include: '#flow_control'
   - include: '#at-rules'
   - include: '#rule-list'
@@ -646,7 +646,7 @@ repository:
       - include: '#general'
       - include: '#rule_mixin'
       - include: '#combinators'
-      - include: '#selectors'
+      - include: '#selector'
   selector_attribute:
     match: |-
       (?xi)
@@ -837,7 +837,7 @@ repository:
           - match: \b(all)\b
             name: keyword.other.extend-all.less
           - include: '#combinators'
-          - include: '#selectors'
+          - include: '#selector'
           - include: '#commas'
           - include: '#variable'
       - begin: ((:)\bnth-(?:child|last-child|of-type|last-of-type))(\()
@@ -863,7 +863,7 @@ repository:
       - include: source.css#pseudo-classes
       - include: source.css#pseudo-elements
       - include: source.css#functional-pseudo-classes
-  selectors:
+  selector:
     patterns:
       - include: source.css#tag-names
       - include: '#selector_custom'
@@ -879,6 +879,45 @@ repository:
       - include: source.css#pseudo-elements
       - include: '#selector_attribute'
       - include: '#parent_selector_suffix'
+  selector-innards:
+    patterns:
+      - include: '#comment-block'
+      - include: '#comment-line'
+      - include: '#commas'
+      - include: '#escapes'
+      - include: '#combinators'
+      - captures:
+          '1':
+            name: entity.other.namespace-prefix.less
+          '2':
+            name: punctuation.separator.less
+        match: >-
+            (?x)
+
+            (?:^|(?<=[\s,(};]))                    # Follows whitespace, comma, semicolon, or bracket
+
+            (?!
+              [-\w*]+
+              \|
+              (?!
+                  [-\[:.*\#a-zA-Z_]                # Make sure there's a selector to match
+                | [^\x00-\x7F]
+              )
+            )
+
+            (
+              (?: [-a-zA-Z_]    | [^\x00-\x7F] )   # First letter
+              (?: [-a-zA-Z0-9_] | [^\x00-\x7F]     # Remainder of identifier
+                | \\(?:[0-9a-fA-F]{1,6}|.)
+              )*
+              |
+              \*                                   # Universal namespace
+            )?
+
+            (\|)                                   # Namespace separator
+      - include: source.css#tag-names
+      - match: \*
+        name: entity.name.tag.wildcard.less
   string:
     patterns:
       - match: (~)(?=['"])
