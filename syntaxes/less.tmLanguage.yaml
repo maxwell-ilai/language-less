@@ -566,33 +566,6 @@ repository:
       - include: '#rule-list'
   rule-mixin:
     patterns:
-      - begin: ([.#][\w-]+[.#\w-]*)(\()
-        beginCaptures:
-          '1':
-            name: entity.name.function.less
-          '2':
-            name: punctuation.definition.mixin.begin.bracket.round.less
-        end: (\))
-        endCaptures:
-          '1':
-            name: punctuation.definition.mixin.end.bracket.round.less
-        name: meta.rule.mixin.less
-        patterns:
-          - include: '#variable'
-          - begin: (:)
-            beginCaptures:
-              '1':
-                name: punctuation.separator.key-value.less
-            end: (?=\s*[,;\)])
-            contentName: meta.parameter-value.less
-            patterns:
-              - include: '#property-values'
-          - include: '#commas'
-          - include: '#property-values'
-          - match: ';'
-            name: punctuation.terminator.rule.less
-          - match: '\.\.\.'
-            name: keyword.other.rest.less
       - begin: ([.#][\w-]+[.#\w-]*)(\[)
         beginCaptures:
           '1':
@@ -829,6 +802,34 @@ repository:
       )
       (?=$|[\s,.\#&)\[:{>+~|]|/\*)
     name: entity.other.attribute-name.parent-suffix.less
+  selector-mixin:
+    begin: ([.#][\w-]+[.#\w-]*)(\()
+    beginCaptures:
+      '1':
+        name: entity.name.function.less
+      '2':
+        name: punctuation.definition.mixin.begin.bracket.round.less
+    end: (\))
+    endCaptures:
+      '1':
+        name: punctuation.definition.mixin.end.bracket.round.less
+    name: meta.rule.mixin.less
+    patterns:
+      - include: '#variable'
+      - begin: (:)
+        beginCaptures:
+          '1':
+            name: punctuation.separator.key-value.less
+        end: (?=\s*[,;\)])
+        contentName: meta.parameter-value.less
+        patterns:
+          - include: '#property-values'
+      - include: '#commas'
+      - include: '#property-values'
+      - match: ';'
+        name: punctuation.terminator.rule.less
+      - match: '\.\.\.'
+        name: keyword.other.rest.less
   selector:
     begin: |-
       (?x)
@@ -854,6 +855,7 @@ repository:
       - include: '#commas'
       - include: '#escapes'
       - include: '#combinators'
+      - include: '#selector-mixin'
       - include: '#selector-namespace'
       - include: source.css#tag-names
       - match: \*
