@@ -4,9 +4,9 @@ patterns:
   - include: '#variable-setting'
   - include: '#comment-block'
   - include: '#comment-line'
+  - include: '#flow-control'
   - include: '#combinators'
   - include: '#selector'
-  - include: '#flow_control'
   - include: '#at-rules'
   - include: '#rule-list'
 repository:
@@ -146,7 +146,7 @@ repository:
                   |
 
                   ([-+]?(?:\d+(?:\.\d+)?|\.\d+)%)     # Percentile value
-              - include: '#flow_control'
+              - include: '#flow-control'
               - include: '#interpolation'
               - include: '#rule-list'
               - include: '#rules'
@@ -192,7 +192,7 @@ repository:
                   - include: '#general'
                   - include: '#property-values'
           - include: '#variable'
-          - include: '#conditional_operators'
+          - include: '#conditional-operators'
           - include: source.css#media-types
       - begin: (?i)((@)namespace)(?=[\s'";]|/\*|$)
         beginCaptures:
@@ -317,40 +317,76 @@ repository:
         name: punctuation.definition.comment.less
     end: \n
     name: comment.line.less
-  constant_boolean:
-    match: \b(true|false)\b
-    name: support.constant.boolean.less
   functions:
-    begin: (?i)(?<![\w-])([\w-]+)(\()
-    beginCaptures:
-      '1':
-        name: support.function.misc.less
-      '2':
-        name: punctuation.section.function.less
-    end: (\))
-    endCaptures:
-      '1':
-        name: punctuation.section.function.less
-    name: meta.function.misc.less
     patterns:
-      - include: '#parameters'
-  constant_important:
-    match: '!important'
-    name: keyword.other.important.less
-  constant_less_functions:
-    begin: >-
-      (if|boolean|escape|e|\%|replace|length|extract|range|each|ceil|floor|percentage|round|sqrt|abs|sin|asin|cos|acos|tan|atan|pi|pow|mod|min|max|is(?:number|string|color|keyword|url|pixel|em|percentage|unit|ruleset|defined)|color|image-(?:size|width|height)|convert|data-uri|default|unit|get-unit|svg-gradient|rgba?|argb|hsla?|hsva?|hue|saturation|lightness|hsvhue|hsvsaturation|hsvvalue|red|green|blue|alpha|luma|luminance|saturate|desaturate|lighten|darken|fadein|fadeout|fade|spin|mix|tint|shade|greyscale|contrast|multiply|screen|overlay|softlight|hardlight|difference|exclusion|average|negation)(\()
-    beginCaptures:
-      '1':
-        name: support.function.misc.less
-      '2':
-        name: punctuation.section.function.less
-    end: (\))
-    endCaptures:
-      '1':
-        name: punctuation.section.function.less
-    patterns:
-      - include: '#parameters'
+      - begin: (?<![\w-])(if)(\()
+        beginCaptures:
+          '1':
+              name: keyword.control.if.less
+          '2':
+            name: punctuation.section.function.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.section.function.end.bracket.round.less
+        name: meta.function.if.less
+        patterns:
+          - include: '#logical-operators'
+          - include: '#property-values'
+      - begin: (?<![\w-])(boolean)(\()
+        beginCaptures:
+          '1':
+              name: keyword.control.boolean.less
+          '2':
+            name: punctuation.section.function.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.section.function.end.bracket.round.less
+        name: meta.function.boolean.less
+        patterns:
+          - include: '#comparison-operators'
+          - include: '#property-values'
+      - begin: |-
+          (?x) (?<![\w-])
+          (
+            # Built-in Functions
+            escape|e|\%|replace
+            | length|extract|range|each
+            | ceil|floor|percentage|round|sqrt|abs|sin|asin|cos|acos|tan|atan|pi|pow|mod|min|max
+            | is(?:number|string|color|keyword|url|pixel|em|percentage|unit|ruleset|defined)
+            | rgba?|argb|hsla?|hsva?
+            | hue|saturation|lightness|hsvhue|hsvsaturation|hsvvalue|red|green|blue|alpha|luma|luminance
+            | saturate|desaturate|lighten|darken|fadein|fadeout|fade|spin|mix|tint|shade|greyscale|contrast
+            | multiply|screen|overlay|softlight|hardlight|difference|exclusion|average|negation
+          )
+          (\()
+        beginCaptures:
+          '1':
+              name: support.function.built-in.less
+          '2':
+            name: punctuation.section.function.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.section.function.end.bracket.round.less
+        name: meta.function.built-in.less
+        patterns:
+          - include: '#comparison-operators'
+          - include: '#property-values'
+      - begin: (?i)(?<![\w-])([\w-]+)(\()
+        beginCaptures:
+          '1':
+            name: support.function.misc.less
+          '2':
+            name: punctuation.section.function.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.section.function.end.bracket.round.less
+        name: meta.function.misc.less
+        patterns:
+          - include: '#property-values'
   escapes:
     patterns:
       - match: \\[0-9a-fA-F]{1,6}
@@ -360,12 +396,11 @@ repository:
         name: constant.character.escape.newline.css
       - match: \\.
         name: constant.character.escape.css
-  flow_control:
+  flow-control:
     patterns:
-      - include: '#rule_mixin'
-      - include: '#rule_if'
-      - include: '#rule_when'
-      - include: '#rule_each'
+      - include: '#rule-mixin'
+      - include: '#rule-when'
+      - include: '#rule-each'
   function_attributes:
     patterns:
       - match: ':'
@@ -387,14 +422,14 @@ repository:
       '3':
         name: punctuation.definition.interpolation.end.bracket.curly.less
     name: variable.other.interpolation.less
-  conditional_operators:
+  conditional-operators:
     patterns:
-      - include: '#comparison_operators'
-      - include: '#logical_operators'
-  comparison_operators:
-    match: '==|!=|<=|>=|=|<|>'
+      - include: '#comparison-operators'
+      - include: '#logical-operators'
+  comparison-operators:
+    match: '!=|<=|>=|=|<|>'
     name: keyword.operator.comparison.less
-  logical_operators:
+  logical-operators:
     match: \b(not|or|and)\b
     name: keyword.operator.logical.less
   map:
@@ -424,27 +459,6 @@ repository:
   operators:
     match: '[*/]|(?<=\s|^)[-+](?=\s|$)'
     name: keyword.operator.arithmetic.css
-  parameters:
-    patterns:
-      - include: '#conditional_operators'
-      - include: '#operators'
-      - include: '#variable'
-      - begin: \(
-        beginCaptures:
-          '0':
-            name: punctuation.definition.begin.bracket.round.less
-        end: \)
-        endCaptures:
-          '0':
-            name: punctuation.definition.end.bracket.round.less
-        patterns:
-          - include: '#function_attributes'
-      - include: '#property-values'
-      - include: '#comment-block'
-      - match: '[^''",)\s]+'
-        name: variable.parameter.url.less
-      - match: ','
-        name: punctuation.separator.delimiter.less
   rule-list:
     begin: '{'
     beginCaptures:
@@ -457,6 +471,7 @@ repository:
     name: meta.property-list.less
     patterns:
       - include: '#rule-list-innards'
+      - include: '$self'
   rule-list-innards:
     patterns:
       - include: '#variable-setting'
@@ -490,23 +505,21 @@ repository:
           - include: '#property-values'
       - match: ;
         name: punctuation.terminator.rule.less
-      - include: '$self'
   property-values:
     patterns:
+      - include: '#variable'
+      - include: '#rule-mixin'
       - include: '#commas'
       - include: '#comment-block'
       - include: '#escapes'
-      - include: '#string'
-      - include: '#flow_control'
       - include: '#functions'
-      - include: '#constant_less_functions'
-      - include: '#constant_important'
-      - include: '#constant_boolean'
-      - include: source.css#numeric-values
       - include: source.css#property-keywords
+      - include: source.css#unicode-range
+      - include: source.css#numeric-values
       - include: source.css#color-keywords
-      - include: source.css#property-names
-      - include: '#operators'
+      - include: '#string'
+      - match: '!\s*important(?![\w-])'
+        name: keyword.other.important.less
       - begin: \(
         beginCaptures:
           '0':
@@ -516,10 +529,12 @@ repository:
           '0':
             name: punctuation.definition.end.bracket.round.less
         patterns:
-          - include: '#conditional_operators'
-          - include: '#general'
+          - match: \b(true|false)\b
+            name: support.constant.boolean.less
+          - include: '#operators'
+          - include: '#conditional-operators'
           - include: '#property-values'
-  rule_each:
+  rule-each:
     begin: \s*(each)(\()
     beginCaptures:
       '1':
@@ -549,27 +564,7 @@ repository:
             name: punctuation.separator.delimiter.less
       - include: '#property-values'
       - include: '#rule-list'
-  rule_if:
-    begin: \b(if)(\()
-    beginCaptures:
-      '1':
-          name: keyword.control.rule.if.less
-      '2':
-        name: punctuation.definition.if.begin.bracket.round.less
-    end: \s*(\))
-    endCaptures:
-      '1':
-        name: punctuation.definition.if.end.bracket.round.less
-    name: meta.rule.if.less
-    patterns:
-      - include: '#conditional_operators'
-      - include: '#variable'
-      - include: '#property-values'
-      - match: '[^''"),\s]+'
-        name: variable.other.misc.less
-      - match: ','
-        name: punctuation.separator.delimiter.less
-  rule_mixin:
+  rule-mixin:
     patterns:
       - begin: ([.#][\w-]+[.#\w-]*)(\()
         beginCaptures:
@@ -584,20 +579,19 @@ repository:
         name: meta.rule.mixin.less
         patterns:
           - include: '#variable'
-          - include: '#property-values'
           - begin: (:)
             beginCaptures:
               '1':
                 name: punctuation.separator.key-value.less
-            end: \s*((?=,|;|\)))
+            end: (?=\s*[,;\)])
             contentName: meta.parameter-value.less
             patterns:
               - include: '#property-values'
+          - include: '#commas'
+          - include: '#property-values'
           - match: ';'
             name: punctuation.terminator.rule.less
-          - match: ','
-            name: punctuation.separator.delimiter.less
-          - match: \.\.\.
+          - match: '\.\.\.'
             name: keyword.other.rest.less
       - begin: ([.#][\w-]+[.#\w-]*)(\[)
         beginCaptures:
@@ -616,7 +610,7 @@ repository:
             name: variable.parameter.map.less
       - match: ([.#][\w-]+[.#\w-]*)(?=;)
         name: entity.name.function.less
-  rule_when:
+  rule-when:
     begin: \b(when\b)\s*
     beginCaptures:
       '1':
@@ -624,7 +618,7 @@ repository:
     end: (?=\s*{)
     name: meta.rule.when.less
     patterns:
-      - include: '#logical_operators'
+      - include: '#logical-operators'
       - begin: \(
         beginCaptures:
           '0':
@@ -634,194 +628,152 @@ repository:
           '0':
             name: punctuation.definition.condition.end.bracket.round.less
         patterns:
-          - include: '#conditional_operators'
+          - include: '#conditional-operators'
           - include: '#variable'
+          - match: \b(true|false)\b
+            name: support.constant.boolean.less
           - include: '#property-values'
-          - match: '[^''"),\s]+'
-            name: variable.other.misc.less
-      - match: ','
-        name: punctuation.separator.delimiter.less
+          - match: '[^''"),;\s]+'
+            name: string.unquoted.less
+      - include: '#commas'
   rules:
     patterns:
       - include: '#general'
-      - include: '#rule_mixin'
+      - include: '#rule-mixin'
       - include: '#combinators'
       - include: '#selector'
-  selector_attribute:
-    match: |-
-      (?xi)
-      (\[)
-      \s*
-      (
-        (?:
-          [-a-zA-Z_0-9]|[^\x00-\x7F]       # Valid identifier characters
-          | \\(?:[0-9a-fA-F]{1,6}|.)       # Escape sequence
-          | \@\{                           # Interpolation (escaped to avoid Coffeelint errors)
-          | \.?\@                          # Possible start of interpolation variable
-          | }                              # Possible end of interpolation
-        )+?
-      )
-      (?:
-        \s*([~|^$*]?=)\s*
-        (?:
-          (
-            (?:
-              [-a-zA-Z_0-9]|[^\x00-\x7F]   # Valid identifier characters
-              | \\(?:[0-9a-fA-F]{1,6}|.)   # Escape sequence
-              | \@\{                       # Interpolation (escaped to avoid Coffeelint errors)
-              | \.?\@                      # Possible start of interpolation variable
-              | }                          # Possible end of interpolation
-            )+
-          )
-          |
-          ((")(.*?)("))
-          |
-          ((')(.*?)('))
-        )
-      )?
-      \s*
-      (\])
-    name: meta.attribute-selector.less
+  selector-namespace:
     captures:
       '1':
-        name: punctuation.definition.attribute-selector.begin.bracket.square.less
+        name: entity.other.namespace-prefix.less
       '2':
-        name: entity.other.attribute-name.attribute.less
-        patterns:
-          - include: '#interpolation'
-          - match: \\([0-9a-fA-F]{1,6}|.)
-            name: constant.character.escape.less
-          - match: \$|}
-            name: invalid.illegal.less
-      '3':
-        name: keyword.operator.less
-      '4':
-        name: string.unquoted.attribute-value.less
-        patterns:
-          - include: '#interpolation'
-          - match: \\([0-9a-fA-F]{1,6}|.)
-            name: constant.character.escape.less
-          - match: \$|}
-            name: invalid.illegal.less
-      '5':
-        name: string.quoted.double.attribute-value.less
-      '6':
-        name: punctuation.definition.string.begin.less
-      '7':
-        patterns:
-          - include: '#interpolation'
-          - match: \\([0-9a-fA-F]{1,6}|.)
-            name: constant.character.escape.less
-          - match: \$|}
-            name: invalid.illegal.less
-      '8':
-        name: punctuation.definition.string.end.less
-      '9':
-        name: string.quoted.single.attribute-value.less
-      '10':
-        name: punctuation.definition.string.begin.less
-      '11':
-        patterns:
-          - include: '#interpolation'
-          - match: \\([0-9a-fA-F]{1,6}|.)
-            name: constant.character.escape.less
-          - match: \$|}
-            name: invalid.illegal.less
-      '12':
-        name: punctuation.definition.string.end.less
-      '13':
-        name: punctuation.definition.attribute-selector.end.bracket.square.less
-  selector_class:
-    match: |-
-      (?x)
-      (\.)                                 # Valid class-name
-      (
-        (?: [-a-zA-Z_0-9]|[^\x00-\x7F]     # Valid identifier characters
-          | \\(?:[0-9a-fA-F]{1,6}|.)       # Escape sequence
-          | \@\{                           # Interpolation (escaped to avoid Coffeelint errors)
-          | \.?\@                          # Possible start of interpolation variable
-          | }                              # Possible end of interpolation
-        )+
-      )                                    # Followed by either:
-      (?= $                                # - End of the line
-        | [\s,\#)\[:{>+~|]                 # - Another selector
-        | \.[^$]                           # - Class selector, negating module variable
-        | /\*                              # - A block comment
-        | ;                                # - A semicolon
-      )
-    name: entity.other.attribute-name.class.css
-    captures:
-      '1':
-        name: punctuation.definition.entity.css
-      '2':
-        patterns:
-          - include: '#interpolation'
-          - match: \\([0-9a-fA-F]{1,6}|.)
-            name: constant.character.escape.less
-          - match: \$|}
-            name: invalid.illegal.less
-  selector_custom:
+        name: punctuation.separator.less
     match: >-
-      \b([a-zA-Z0-9]+(-[a-zA-Z0-9]+)+)(?=\.|\s++[^:]|\s*[,\[{]|:(link|visited|hover|active|focus|target|lang|disabled|enabled|checked|indeterminate|root|nth-(child|last-child|of-type|last-of-type)|first-child|last-child|first-of-type|last-of-type|only-child|only-of-type|empty|not|valid|invalid)(\([0-9A-Za-z]*\))?)
-    name: entity.name.tag.custom.less
-  selector_id:
-    match: |-
-      (?x)
-      (\#)                                 # Valid id-name
-      (
-        (?: [-a-zA-Z_0-9]|[^\x00-\x7F]     # Valid identifier characters
-          | \\(?:[0-9a-fA-F]{1,6}|.)       # Escape sequence
-          | \@\{                           # Interpolation (escaped to avoid Coffeelint errors)
-          | \.?\@                          # Possible start of interpolation variable
-          | }                              # Possible end of interpolation
-        )+
-      )                                    # Followed by either:
-      (?= $                                # - End of the line
-        | [\s,\#)\[:{>+~|]                 # - Another selector
-        | \.[^$]                           # - Class selector, negating module variable
-        | /\*                              # - A block comment
-      )
-    name: entity.other.attribute-name.id.css
+        (?x)
+
+        (?:^|(?<=[\s,(};]))                    # Follows whitespace, comma, semicolon, or bracket
+
+        (?!
+          [-\w*]+
+          \|
+          (?!
+              [-\[:.*\#a-zA-Z_]                # Make sure there's a selector to match
+            | [^\x00-\x7F]
+          )
+        )
+
+        (
+          (?: [-a-zA-Z_]    | [^\x00-\x7F] )   # First letter
+          (?: [-a-zA-Z0-9_] | [^\x00-\x7F]     # Remainder of identifier
+            | \\(?:[0-9a-fA-F]{1,6}|.)
+          )*
+          |
+          \*                                   # Universal namespace
+        )?
+
+        (\|)                                   # Namespace separator
+  selector-class:
     captures:
       '1':
-        name: punctuation.definition.entity.css
+        name: punctuation.definition.entity.less
       '2':
         patterns:
+          - include: '#escapes'
           - include: '#interpolation'
-          - match: \\([0-9a-fA-F]{1,6}|.)
-            name: constant.character.escape.less
-          - match: \$|}
-            name: invalid.illegal.identifier.less
-  parent_selector_suffix:
     match: |-
       (?x)
-      (?<=&)
+      (\.)                                   # Valid class-name
       (
-        (?: [-a-zA-Z_0-9]|[^\x00-\x7F]     # Valid identifier characters
-          | \\(?:[0-9a-fA-F]{1,6}|.)       # Escape sequence
-          | \@\{                           # Interpolation (escaped to avoid Coffeelint errors)
-          | \@                             # Possible start of interpolation variable
-          | }                              # Possible end of interpolation
+        (?: [-a-zA-Z_0-9]|[^\x00-\x7F]       # Valid identifier characters
+          | \\(?:[0-9a-fA-F]{1,6}|.)         # Escape sequence
+          | @\{                              # Interpolation 
+          | }                                # Possible end of interpolation
         )+
-      )                                    # Followed by either:
-      (?= $                                # - End of the line
-        | [\s,.\#)\[:{>+~|]                # - Another selector
-        | /\*                              # - A block comment
+      )                                      # Followed by either:
+      (?= $                                  # - End of the line
+        | [\s,.\#)\[:{>+~|]                  # - Another selector
+        | /\*                                # - A block comment
       )
-    name: entity.other.attribute-name.parent-selector-suffix.css
+    name: entity.other.attribute-name.class.less
+  selector-id:
     captures:
       '1':
-        name: punctuation.definition.entity.css
+        name: punctuation.definition.entity.less
       '2':
         patterns:
+          - include: '#escapes'
           - include: '#interpolation'
-          - match: \\([0-9a-fA-F]{1,6}|.)
-            name: constant.character.escape.less
-          - match: \$|}
-            name: invalid.illegal.identifier.less
-  selector_pseudo_class:
+    match: |-
+      (?x)
+      (\#)
+      (
+        -?
+        (?![0-9])
+        (?:[-a-zA-Z0-9_]|[^\x00-\x7F]|\\(?:[0-9a-fA-F]{1,6}|.)|@\{|})+
+      )
+      (?=$|[\s,.\#)\[:{>+~|]|/\*)
+    name: entity.other.attribute-name.id.less
+  selector-attribute:
+    begin: \[
+    beginCaptures:
+      '0':
+        name: punctuation.definition.entity.begin.bracket.square.less
+    end: \]
+    endCaptures:
+      '0':
+        name: punctuation.definition.entity.end.bracket.square.less
+    name: meta.attribute-selector.less
     patterns:
-      - begin: ((:)\bextend)(\()
+      - include: '#comment-block'
+      - include: '#string'
+      - captures:
+          '1':
+            name: storage.modifier.ignore-case.less
+        match: (?<=["'\s]|^|\*/)\s*([iI])\s*(?=[\s\]]|/\*|$)
+      - captures:
+          '1':
+            name: string.unquoted.attribute-value.less
+            patterns:
+              - include: '#escapes'
+        match: (?x)(?<==)\s*((?!/\*)(?:[^\\"'\s\]]|\\.)+)
+      - include: '#escapes'
+      - match: '[~|^$*]?='
+        name: keyword.operator.pattern.less
+      - match: \|
+        name: punctuation.separator.less
+      - captures:
+          '1':
+            name: entity.other.namespace-prefix.less
+            patterns:
+              - include: '#escapes'
+        match: |-
+          (?x)
+          # Qualified namespace prefix
+          ( -?(?!\d)(?:[\w-]|[^\x00-\x7F]|\\(?:[0-9a-fA-F]{1,6}|.))+
+          | \*
+          )
+          # Lookahead to ensure there's a valid identifier ahead
+          (?=
+            \| (?!\s|=|$|\])
+            (?: -?(?!\d)
+              |   [\\\w-]
+              |   [^\x00-\x7F]
+              )
+          )
+      - captures:
+          '1':
+            name: entity.other.attribute-name.css
+            patterns:
+              - include: '#escapes'
+              - include: '#interpolation'
+        match: |-
+          (?x)
+          (-?(?!\d)(?>[\w-]|[^\x00-\x7F]|\\(?:[0-9a-fA-F]{1,6}|.)|@\{|})+)
+          \s*
+          (?=[~|^\]$*=]|/\*)
+  selector-pseudo-class:
+    patterns:
+      - begin: (?i)((:)extend)(\()
         beginCaptures:
           '1':
             name: keyword.control.extend.less
@@ -834,51 +786,67 @@ repository:
           '0':
             name: punctuation.definition.extend.end.bracket.round.less
         patterns:
-          - match: \b(all)\b
-            name: keyword.other.extend-all.less
+          - match: (?i)all
+            name: support.constant.extend-all.less
           - include: '#combinators'
           - include: '#selector'
           - include: '#commas'
           - include: '#variable'
-      - begin: ((:)\bnth-(?:child|last-child|of-type|last-of-type))(\()
+      - begin: (?i)((:)nth-(?:last-)?(?:child|of-type))(\()
         beginCaptures:
           '1':
-            name: entity.other.attribute-name.pseudo-class.css
+            name: entity.other.attribute-name.pseudo-class.less
           '2':
-            name: punctuation.definition.entity.css
+            name: punctuation.definition.entity.less
           '3':
-            name: punctuation.definition.pseudo-class.begin.bracket.round.css
+            name: punctuation.definition.pseudo-class.begin.bracket.round.less
         end: \)
         endCaptures:
           '0':
-            name: punctuation.definition.pseudo-class.end.bracket.round.css
+            name: punctuation.definition.pseudo-class.end.bracket.round.less
         patterns:
-          - include: '#interpolation'
-          - match: \d+
-            name: constant.numeric.css
-          - match: (?<=\d)n\b|\b(n|even|odd)\b
-            name: constant.other.less
-          - match: \w+
-            name: invalid.illegal.less
+          - match: (?i)[+-]?(\d+n?|n)(\s*[+-]\s*\d+)?
+            name: constant.numeric.less
+          - match: (?i)even|odd
+            name: support.constant.parity.less
+          - include: '#variable'
       - include: source.css#pseudo-classes
       - include: source.css#pseudo-elements
       - include: source.css#functional-pseudo-classes
+  selector-parent-suffix:
+    captures:
+      '1':
+        patterns:
+          - include: '#escapes'
+          - include: '#interpolation'
+    match: |-
+      (?x)
+      (?<=&)
+      (
+        -?
+        (?![0-9])
+        (?:[-a-zA-Z0-9_]|[^\x00-\x7F]|\\(?:[0-9a-fA-F]{1,6}|.)|@\{|})+
+      )
+      (?=$|[\s,.\#&)\[:{>+~|]|/\*)
+    name: entity.other.attribute-name.parent-suffix.less
   selector:
+    begin: |-
+      (?x)
+      (?=
+        (?:\|)?                   # Possible anonymous namespace prefix
+        (?:
+          [-\[:.*\#&a-zA-Z_]       # Valid selector character
+          |
+          [^\x00-\x7F]            # Which can include non-ASCII symbols
+          |
+          \\                      # Or an escape sequence
+          (?:[0-9a-fA-F]{1,6}|.)
+        )
+      )
+    end: (?=\s*[/@{)])
+    name: meta.selector.less
     patterns:
-      - include: source.css#tag-names
-      - include: '#selector_custom'
-      - include: '#selector_class'
-      - include: '#selector_id'
-      - include: '#selector_pseudo_class'
-      - match: \*
-        name: entity.name.tag.wildcard.less
-      - match: '&'
-        name: entity.name.tag.reference.less
-      - match: '\|'
-        name: entity.name.tag.namespace-separator.less
-      - include: source.css#pseudo-elements
-      - include: '#selector_attribute'
-      - include: '#parent_selector_suffix'
+      - include: '#selector-innards'
   selector-innards:
     patterns:
       - include: '#comment-block'
@@ -886,38 +854,29 @@ repository:
       - include: '#commas'
       - include: '#escapes'
       - include: '#combinators'
-      - captures:
-          '1':
-            name: entity.other.namespace-prefix.less
-          '2':
-            name: punctuation.separator.less
-        match: >-
-            (?x)
-
-            (?:^|(?<=[\s,(};]))                    # Follows whitespace, comma, semicolon, or bracket
-
-            (?!
-              [-\w*]+
-              \|
-              (?!
-                  [-\[:.*\#a-zA-Z_]                # Make sure there's a selector to match
-                | [^\x00-\x7F]
-              )
-            )
-
-            (
-              (?: [-a-zA-Z_]    | [^\x00-\x7F] )   # First letter
-              (?: [-a-zA-Z0-9_] | [^\x00-\x7F]     # Remainder of identifier
-                | \\(?:[0-9a-fA-F]{1,6}|.)
-              )*
-              |
-              \*                                   # Universal namespace
-            )?
-
-            (\|)                                   # Namespace separator
+      - include: '#selector-namespace'
       - include: source.css#tag-names
       - match: \*
         name: entity.name.tag.wildcard.less
+      - match: \&
+        name: entity.name.tag.referece.less
+      - include: '#selector-class'
+      - include: '#selector-id'
+      - include: '#selector-attribute'
+      - include: '#selector-pseudo-class'
+      - include: '#selector-parent-suffix'
+      - match: |-
+          (?x) (?<![@\w-])
+          (?=            # Custom element names must:
+            [a-z]        # - start with a lowercase ASCII letter,
+            \w* -        # - contain at least one dash
+          )
+          (?:
+            (?![A-Z])    # No uppercase ASCII letters are allowed
+            [\w-]        # Allow any other word character or dash
+          )+
+          (?![(\w-])
+        name: entity.name.tag.custom.less
   string:
     patterns:
       - match: (~)(?=['"])
@@ -953,29 +912,36 @@ repository:
       - include: '#variables'
       - include: '#interpolation'
   variable-setting:
-    begin: (?=@(?!page)[\w-]+\s*:)
-    end: (?<=})|(;)
-    endCaptures:
-      '1':
-        name: punctuation.terminator.rule.less
     patterns:
-      - match: (@[\w-]+)(?=\s*:)
-        name: variable.other.less
-      - begin: ':'
-        beginCaptures:
-          '0':
-            name: punctuation.separator.key-value.less
-        end: (?<=})|(?=;)
+      - begin: (?=@(?!page)[\w-]+\s*:)
+        end: (?<=})|(;)
+        endCaptures:
+          '1':
+            name: punctuation.terminator.rule.less
         patterns:
-          - match: ([.#](?![0-9])[\w-]+[.#\w-]*)(?![.#\w-])
-            name: string.unquoted.less
-          - include: '#comment-block'
-          - include: '#comment-line'
-          - include: '#map'
-          - include: '#property-values'
-          - include: '#variable'
-          - match: '[^''",;\s]+'
-            name: string.unquoted.less
+          - match: (@[\w-]+)(?=\s*:)
+            name: variable.other.less
+          - begin: ':'
+            beginCaptures:
+              '0':
+                name: punctuation.separator.key-value.less
+            end: (?<=})|(?=;)
+            patterns:
+              - match: ([.#](?![0-9])[\w-]+[.#\w-]*)(?![.#\w-])
+                name: string.unquoted.less
+              - include: '#comment-block'
+              - include: '#comment-line'
+              - include: '#map'
+              - include: '#property-values'
+              - include: '#variable'
+              - match: '[^''",;\s]+'
+                name: string.unquoted.less
+      - captures:
+          '1':
+            name: variable.other.call.less
+          '2':
+            name: punctuation.definition.variable-call.bracket.round.less
+        match: (@[-a-zA-Z_][-a-zA-Z0-9_]*)(\(\))
   variables:
     patterns:
       - begin: (@[-a-zA-Z_][-a-zA-Z0-9_]*)(\[)
