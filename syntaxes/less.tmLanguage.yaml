@@ -75,7 +75,7 @@ repository:
                 name: punctuation.definition.end.bracket.round.less
             patterns:
               - match: \b(reference|inline|less|css|once|multiple|optional)\b
-                name: keyword.other.import.option.less
+                name: support.constant.import.option.less
               - match: ','
                 name: punctuation.separator.delimiter.less
           - begin: \G\s*(?=/\*)
@@ -396,12 +396,12 @@ repository:
   escapes:
     patterns:
       - match: \\[0-9a-fA-F]{1,6}
-        name: constant.character.escape.codepoint.css
+        name: constant.character.escape.codepoint.less
       - begin: \\$\s*
         end: ^(?<!\G)
-        name: constant.character.escape.newline.css
+        name: constant.character.escape.newline.less
       - match: \\.
-        name: constant.character.escape.css
+        name: constant.character.escape.less
   interpolation:
     match: '(@{)([-a-zA-Z_][-a-zA-Z0-9_]*)(})'
     captures:
@@ -451,10 +451,7 @@ repository:
         name: entity.name.function.less
       '2':
         name: punctuation.definition.mixin.begin.bracket.round.less
-    end: (?=\s*{)|(;)|(?=$)
-    endCaptures:
-      '1':
-        name: punctuation.terminator.rule.less
+    end: (?=\s*[;{])|(?=$)
     name: meta.rule.mixin.less
     patterns:
       - begin: \(
@@ -467,6 +464,7 @@ repository:
             name: punctuation.definition.mixin.end.bracket.round.less
         name: meta.parameter-mixin.less
         patterns:
+          - include: '#escapes'
           - include: '#variable'
           - begin: (:)
             beginCaptures:
@@ -478,10 +476,12 @@ repository:
               - include: '#property-values'
           - match: '\.\.\.'
             name: keyword.other.parameter-rest.less
-          - match: ';'
-            name: punctuation.terminator.rule.less
           - include: '#property-values'
           - include: '#rule-list'
+          - match: '[^''"),;@\s\\]+'
+            name: string.unquoted.less
+          - match: ';'
+            name: punctuation.terminator.rule.less
       - include: '#rule-when'
   operators:
     match: '[*/]|(?<=\s|^)[-+](?=\s|$)'
@@ -608,6 +608,8 @@ repository:
           - include: '#variable'
           - include: '#property-values'
           - include: '#rule-list'
+          - match: '[^''"),;\s]+'
+            name: string.unquoted.less
           - match: ';'
             name: punctuation.terminator.rule.less
       - begin: ([.#][\w-]+[.#\w-]*)(\[)
