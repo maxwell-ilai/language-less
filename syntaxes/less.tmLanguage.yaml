@@ -1,14 +1,17 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json
 name: Less
 patterns:
-  - include: '#variable-setting'
+  - include: '#variable-definition'
   - include: '#comment-block'
   - include: '#comment-line'
-  - include: '#flow-control'
+  - include: '#mixin-definition'
+  - include: '#rule-each'
   - include: '#combinators'
   - include: '#selector'
   - include: '#at-rules'
   - include: '#rule-list'
+  - match: ;
+    name: punctuation.terminator.rule.less
 repository:
   at-rules:
     patterns:
@@ -146,10 +149,8 @@ repository:
                   |
 
                   ([-+]?(?:\d+(?:\.\d+)?|\.\d+)%)     # Percentile value
-              - include: '#flow-control'
               - include: '#interpolation'
               - include: '#rule-list'
-              - include: '#rules'
       - begin: ^\s*((@)media)\b
         beginCaptures:
           '1':
@@ -189,7 +190,9 @@ repository:
                     name: punctuation.terminator.rule.less
                 contentName: meta.property-value.media-query.less
                 patterns:
-                  - include: '#general'
+                  - include: '#variable'
+                  - include: '#comment-block'
+                  - include: '#comment-line'
                   - include: '#property-values'
           - include: '#variable'
           - include: '#conditional-operators'
@@ -250,7 +253,7 @@ repository:
             name: entity.name.function.less
         end: \s*(?={)
         name: meta.at-rule.page.less
-      - begin: ((@)plugin)(?:\s+|$|(?=['"]))
+      - begin: ^\s*((@)plugin)(?:\s+|$|(?=['"]))
         beginCaptures:
           '1':
             name: keyword.control.at-rule.plugin.less
@@ -331,8 +334,11 @@ repository:
             name: punctuation.section.function.end.bracket.round.less
         name: meta.function.if.less
         patterns:
-          - include: '#logical-operators'
+          - include: '#conditional-operators'
+          - match: \b(true|false)\b
+            name: support.constant.boolean.less
           - include: '#property-values'
+          - include: '#rule-list'
       - begin: (?<![\w-])(boolean)(\()
         beginCaptures:
           '1':
@@ -396,24 +402,6 @@ repository:
         name: constant.character.escape.newline.css
       - match: \\.
         name: constant.character.escape.css
-  flow-control:
-    patterns:
-      - include: '#rule-mixin'
-      - include: '#rule-when'
-      - include: '#rule-each'
-  function_attributes:
-    patterns:
-      - match: ':'
-        name: punctuation.separator.key-value.less
-      - include: '#general'
-      - include: '#property-values'
-      - match: '[={}\?;@]'
-        name: invalid.illegal.less
-  general:
-    patterns:
-      - include: '#variable'
-      - include: '#comment-block'
-      - include: '#comment-line'
   interpolation:
     match: '(@{)([-a-zA-Z_][-a-zA-Z0-9_]*)(})'
     captures:
@@ -456,9 +444,48 @@ repository:
       - include: '#map'
       - include: '#variable'
       - include: '#property-values'
+  mixin-definition:
+    begin: ([.#][-a-zA-Z0-9_]+)(?=\()
+    beginCaptures:
+      '1':
+        name: entity.name.function.less
+      '2':
+        name: punctuation.definition.mixin.begin.bracket.round.less
+    end: (?=\s*{)|(;)|(?=$)
+    endCaptures:
+      '1':
+        name: punctuation.terminator.rule.less
+    name: meta.rule.mixin.less
+    patterns:
+      - begin: \(
+        beginCaptures:
+          '0':
+            name: punctuation.definition.mixin.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.mixin.end.bracket.round.less
+        name: meta.parameter-mixin.less
+        patterns:
+          - include: '#variable'
+          - begin: (:)
+            beginCaptures:
+              '1':
+                name: punctuation.separator.key-value.less
+            end: (?=\s*[,;\)])
+            contentName: meta.parameter-value.less
+            patterns:
+              - include: '#property-values'
+          - match: '\.\.\.'
+            name: keyword.other.parameter-rest.less
+          - match: ';'
+            name: punctuation.terminator.rule.less
+          - include: '#property-values'
+          - include: '#rule-list'
+      - include: '#rule-when'
   operators:
     match: '[*/]|(?<=\s|^)[-+](?=\s|$)'
-    name: keyword.operator.arithmetic.css
+    name: keyword.operator.arithmetic.less
   rule-list:
     begin: '{'
     beginCaptures:
@@ -470,11 +497,14 @@ repository:
         name: punctuation.section.property-list.end.bracket.curly.less
     name: meta.property-list.less
     patterns:
+      - include: '#rule-each'
+      - include: '#combinators'
+      - include: '#selector'
       - include: '#rule-list-innards'
       - include: '$self'
   rule-list-innards:
     patterns:
-      - include: '#variable-setting'
+      - include: '#variable-definition'
       - include: '#comment-block'
       - include: '#comment-line'
       - include: '#escapes'
@@ -508,10 +538,10 @@ repository:
   property-values:
     patterns:
       - include: '#variable'
-      - include: '#rule-mixin'
       - include: '#commas'
       - include: '#comment-block'
       - include: '#escapes'
+      - include: '#rule-mixin'
       - include: '#functions'
       - include: source.css#property-keywords
       - include: source.css#unicode-range
@@ -535,7 +565,7 @@ repository:
           - include: '#conditional-operators'
           - include: '#property-values'
   rule-each:
-    begin: \s*(each)(\()
+    begin: (?<![@\w-])(each)(\()
     beginCaptures:
       '1':
           name: keyword.control.rule.each.less
@@ -547,9 +577,6 @@ repository:
         name: punctuation.definition.end.bracket.round.less
     name: meta.rule.each.less
     patterns:
-      - include: '#variables'
-      - match: ','
-        name: punctuation.separator.delimiter.less
       - begin: ([.#]\()
         beginCaptures:
           '0':
@@ -566,6 +593,23 @@ repository:
       - include: '#rule-list'
   rule-mixin:
     patterns:
+      - begin: ([.#][\w-]+[.#\w-]*)(\()
+        beginCaptures:
+          '1':
+            name: entity.name.function.less
+          '2':
+            name: punctuation.definition.mixin.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.mixin.end.bracket.round.less
+        name: meta.rule.mixin.less
+        patterns:
+          - include: '#variable'
+          - include: '#property-values'
+          - include: '#rule-list'
+          - match: ';'
+            name: punctuation.terminator.rule.less
       - begin: ([.#][\w-]+[.#\w-]*)(\[)
         beginCaptures:
           '1':
@@ -581,10 +625,8 @@ repository:
           - include: '#variable'
           - match: '[^''"\],\s]+'
             name: variable.parameter.map.less
-      - match: ([.#][\w-]+[.#\w-]*)(?=;)
-        name: entity.name.function.less
   rule-when:
-    begin: \b(when\b)\s*
+    begin: (?<![@\w-])(when\b)\s*
     beginCaptures:
       '1':
         name: keyword.control.rule.when.less
@@ -609,12 +651,6 @@ repository:
           - match: '[^''"),;\s]+'
             name: string.unquoted.less
       - include: '#commas'
-  rules:
-    patterns:
-      - include: '#general'
-      - include: '#rule-mixin'
-      - include: '#combinators'
-      - include: '#selector'
   selector-namespace:
     captures:
       '1':
@@ -802,60 +838,14 @@ repository:
       )
       (?=$|[\s,.\#&)\[:{>+~|]|/\*)
     name: entity.other.attribute-name.parent-suffix.less
-  selector-mixin:
-    begin: ([.#][\w-]+[.#\w-]*)(\()
-    beginCaptures:
-      '1':
-        name: entity.name.function.less
-      '2':
-        name: punctuation.definition.mixin.begin.bracket.round.less
-    end: (\))
-    endCaptures:
-      '1':
-        name: punctuation.definition.mixin.end.bracket.round.less
-    name: meta.rule.mixin.less
-    patterns:
-      - include: '#variable'
-      - begin: (:)
-        beginCaptures:
-          '1':
-            name: punctuation.separator.key-value.less
-        end: (?=\s*[,;\)])
-        contentName: meta.parameter-value.less
-        patterns:
-          - include: '#property-values'
-      - include: '#commas'
-      - include: '#property-values'
-      - match: ';'
-        name: punctuation.terminator.rule.less
-      - match: '\.\.\.'
-        name: keyword.other.rest.less
   selector:
-    begin: |-
-      (?x)
-      (?=
-        (?:\|)?                   # Possible anonymous namespace prefix
-        (?:
-          [-\[:.*\#&a-zA-Z_]       # Valid selector character
-          |
-          [^\x00-\x7F]            # Which can include non-ASCII symbols
-          |
-          \\                      # Or an escape sequence
-          (?:[0-9a-fA-F]{1,6}|.)
-        )
-      )
-    end: (?=\s*[/@{)])
-    name: meta.selector.less
-    patterns:
-      - include: '#selector-innards'
-  selector-innards:
     patterns:
       - include: '#comment-block'
       - include: '#comment-line'
       - include: '#commas'
       - include: '#escapes'
       - include: '#combinators'
-      - include: '#selector-mixin'
+      - include: '#interpolation'
       - include: '#selector-namespace'
       - include: source.css#tag-names
       - match: \*
@@ -867,6 +857,7 @@ repository:
       - include: '#selector-attribute'
       - include: '#selector-pseudo-class'
       - include: '#selector-parent-suffix'
+      - include: '#rule-when'
       - match: |-
           (?x) (?<![@\w-])
           (?=            # Custom element names must:
@@ -877,7 +868,18 @@ repository:
             (?![A-Z])    # No uppercase ASCII letters are allowed
             [\w-]        # Allow any other word character or dash
           )+
-          (?![(\w-])
+          (?=
+            \.|\s++[^:]|\s*[,\[{]
+            | :
+            (?:
+              link|visited|hover|active|focus|target|dir|lang
+              | disabled|enabled|checked|indeterminate
+              | root|nth-(?:last-)?(?:child|of-type)|first
+              | (?:first|last|only)-(?:child|of-type)|empty
+              | not|has|matches|valid|invalid
+            )
+            (?![(\w-])
+          )
         name: entity.name.tag.custom.less
   string:
     patterns:
@@ -913,7 +915,7 @@ repository:
     patterns:
       - include: '#variables'
       - include: '#interpolation'
-  variable-setting:
+  variable-definition:
     patterns:
       - begin: (?=@(?!page)[\w-]+\s*:)
         end: (?<=})|(;)
@@ -929,10 +931,7 @@ repository:
                 name: punctuation.separator.key-value.less
             end: (?<=})|(?=;)
             patterns:
-              - match: ([.#](?![0-9])[\w-]+[.#\w-]*)(?![.#\w-])
-                name: string.unquoted.less
               - include: '#comment-block'
-              - include: '#comment-line'
               - include: '#map'
               - include: '#property-values'
               - include: '#variable'
