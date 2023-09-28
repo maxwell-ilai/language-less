@@ -499,7 +499,7 @@ repository:
     patterns:
       - include: '#rule-each'
       - include: '#combinators'
-      - include: '#selector'
+      - include: '#inner-selector'
       - include: '#rule-list-innards'
       - include: '$self'
   rule-list-innards:
@@ -518,9 +518,11 @@ repository:
         name: variable.css
       - begin: (?<![-a-zA-Z])(?=[-a-zA-Z])
         end: $|(?![-a-zA-Z])
-        name: meta.property-name.less
         patterns:
           - include: 'source.css#property-names'
+          - match: >-
+              (?<![@\w-])(?=[a-z]\w*-)(?:(?![A-Z])[\w-])+(?![(\w-])
+            name: entity.name.tag.custom.less
       - begin: (:)\s*
         beginCaptures:
           '1':
@@ -841,6 +843,27 @@ repository:
       (?=$|[\s,.\#&)\[:{>+~|]|/\*)
     name: entity.other.attribute-name.parent-suffix.less
   selector:
+    comment: 'Add Interpolation'
+    begin: |-
+      (?x)
+      (?=
+        (?:\|)?                    # Possible anonymous namespace prefix
+        (?:
+          [-\[:.*\#&a-zA-Z_]       # Valid selector character
+          |
+          @\{                      # Interpolation
+          |
+          [^\x00-\x7F]             # Which can include non-ASCII symbols
+          |
+          \\                       # Or an escape sequence
+          (?:[0-9a-fA-F]{1,6}|.)
+        )
+      )
+    end: (?=\s*(?:[/{)]|@(?!\{)))
+    name: meta.selector.less
+    patterns:
+      - include: '#selector-innards'
+  selector-innards:
     patterns:
       - include: '#comment-block'
       - include: '#comment-line'
@@ -861,6 +884,19 @@ repository:
       - include: '#selector-parent-suffix'
       - include: '#rule-when'
       - match: |-
+          (?x)
+          (::?)
+          (?=            # Custom pseudo-classes-elements names must:
+            [a-z]        # - start with a lowercase ASCII letter,
+            \w* -        # - contain at least one dash
+          )
+          (?:
+            (?![A-Z])    # No uppercase ASCII letters are allowed
+            [\w-]        # Allow any other word character or dash
+          )+
+          (?![(\w-])
+        name: entity.name.tag.custom-pseudo-class-element.less
+      - match: |-
           (?x) (?<![@\w-])
           (?=            # Custom element names must:
             [a-z]        # - start with a lowercase ASCII letter,
@@ -870,19 +906,31 @@ repository:
             (?![A-Z])    # No uppercase ASCII letters are allowed
             [\w-]        # Allow any other word character or dash
           )+
-          (?=
-            \.|\s++[^:]|\s*[,\[{]
-            | :
-            (?:
-              link|visited|hover|active|focus|target|dir|lang
-              | disabled|enabled|checked|indeterminate
-              | root|nth-(?:last-)?(?:child|of-type)|first
-              | (?:first|last|only)-(?:child|of-type)|empty
-              | not|has|matches|valid|invalid
-            )
-            (?![(\w-])
-          )
+          (?![(\w-])
         name: entity.name.tag.custom.less
+  inner-selector:
+    patterns:
+      - include: '#comment-block'
+      - include: '#comment-line'
+      - include: '#commas'
+      - include: '#escapes'
+      - include: '#combinators'
+      - include: '#interpolation'
+      - include: '#selector-namespace'
+      - include: source.css#tag-names
+      - match: \*
+        name: entity.name.tag.wildcard.less
+      - match: \&
+        name: entity.name.tag.referece.less
+      - include: '#selector-class'
+      - include: '#selector-id'
+      - include: '#selector-attribute'
+      - include: '#selector-pseudo-class'
+      - include: '#selector-parent-suffix'
+      - include: '#rule-when'
+      - match: >-
+          (::?)(?=[a-z]\w*-)(?:(?![A-Z])[\w-])+(?![(\w-])
+        name: entity.name.tag.custom-pseudo-class-element.less
   string:
     patterns:
       - match: (~)(?=['"])
