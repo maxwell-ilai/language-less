@@ -843,7 +843,6 @@ repository:
       (?=$|[\s,.\#&)\[:{>+~|]|/\*)
     name: entity.other.attribute-name.parent-suffix.less
   selector:
-    comment: 'Add Interpolation'
     begin: |-
       (?x)
       (?=
