@@ -15,7 +15,7 @@ patterns:
 repository:
   at-rules:
     patterns:
-      - begin: \A(?i:(?=\s*@charset\b))
+      - begin: \A(?:\xEF\xBB\xBF)?(?i:(?=\s*@charset\b))
         end: ;|(?=$)
         endCaptures:
           '0':
@@ -85,71 +85,60 @@ repository:
           - include: '#variable'
           - include: '#string'
           - include: '#url'
-      - begin: (?<=^|\s)(@)(?:-(?:webkit|moz)-)?keyframes\b
-        beginCaptures:
-          '0':
-            name: keyword.control.at-rule.keyframes.less
-          '1':
-            name: punctuation.definition.keyword.less
-        end: (?<=})
-        name: meta.at-rule.keyframes.less
+      - begin: (?i)(?=@(?:-(?:webkit|moz|o|ms)-)?keyframes([\s'"{;]|/\*|$))
+        end: (?<=})(?!\G)
         patterns:
-          - match: (?<=@keyframes)\s+((?:[_A-Za-z][-\w]|-[_A-Za-z])[-\w]*)
-            captures:
-              '1':
-                name: entity.name.function.less
-          - begin: (?<=@keyframes)\s+(")
+          - begin: (?i)\G(@)(?:-(?:webkit|moz|o|ms)-)?keyframes
             beginCaptures:
-              '1':
-                name: punctuation.definition.string.begin.less
-            end: '"'
-            endCaptures:
               '0':
-                name: punctuation.definition.string.end.less
-            name: string.quoted.double.less
-            contentName: entity.name.function.less
-            patterns:
-              - match: \\(\h{1,6}|.)
-                name: constant.character.escape.less
-              - include: '#interpolation'
-          - begin: (?<=@keyframes)\s+(')
-            beginCaptures:
+                name: keyword.control.at-rule.keyframes.less
               '1':
-                name: punctuation.definition.string.begin.less
-            end: ''''
-            endCaptures:
-              '0':
-                name: punctuation.definition.string.end.less
-            name: string.quoted.single.less
-            contentName: entity.name.function.less
+                name: punctuation.definition.keyword.less
+            end: (?=\s*{)
+            name: meta.at-rule.keyframes.header.less
             patterns:
-              - match: \\(\h{1,6}|.)
-                name: constant.character.escape.less
-              - include: '#interpolation'
+              - include: '#comment-block'
+              - include: '#escapes'
+              - include: '#variables'
+              - captures:
+                  '0':
+                    patterns:
+                      - include: '#escapes'
+                match: |-
+                  (?x)
+                  (?:[-a-zA-Z_]    | [^\x00-\x7F])     # First letter
+                  (?:[-a-zA-Z0-9_] | [^\x00-\x7F]      # Remainder of identifier
+                    |\\(?:[0-9a-fA-F]{1,6}|.)
+                  )*
+                name: variable.parameter.keyframe-list.less
           - begin: '{'
             beginCaptures:
               '0':
-                name: punctuation.section.keyframes.begin.less
+                name: punctuation.section.keyframes.begin.bracket.curly.less
             end: '}'
             endCaptures:
               '0':
-                name: punctuation.section.keyframes.end.less
+                name: punctuation.section.keyframes.end.bracket.curly.less
+            name: meta.at-rule.keyframes.body.less
             patterns:
+              - include: '#comment-block'
+              - include: '#comment-line'
+              - include: '#escapes'
+              - include: '#interpolation'
               - captures:
                   '1':
-                    name: entity.other.keyframe-offset.css
+                    name: entity.other.keyframe-offset.less
                   '2':
-                    name: entity.other.keyframe-offset.percentage.css
+                    name: entity.other.keyframe-offset.percentage.less
                 match: >-
                   (?xi)
 
-                  (?<![\w-]) (from|to) (?![\w-])      # Keywords for 0% |
+                  (?<![\w-]) (from|to) (?![\w-])         # Keywords for 0% |
                   100%
 
                   |
 
-                  ([-+]?(?:\d+(?:\.\d+)?|\.\d+)%)     # Percentile value
-              - include: '#interpolation'
+                  ([-+]?(?:\d+(?:\.\d+)?|\.\d+)%)        # Percentile value
               - include: '#rule-list'
       - begin: ^\s*((@)media)\b
         beginCaptures:
@@ -977,15 +966,13 @@ repository:
           - begin: ':'
             beginCaptures:
               '0':
-                name: punctuation.separator.key-value.less
+                name: keyword.other.punctuation.separator.key-value.less
             end: (?<=})|(?=;)
             patterns:
               - include: '#comment-block'
               - include: '#map'
               - include: '#property-values'
               - include: '#variable'
-              - match: '[^''",;\s]+'
-                name: string.unquoted.less
       - captures:
           '1':
             name: variable.other.call.less
