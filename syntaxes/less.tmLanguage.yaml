@@ -41,6 +41,45 @@ repository:
               - begin: (?:\G|^)(?=(?:[^"])+$)
                 end: $
                 name: invalid.illegal.unclosed.string.css
+      - begin: (?i)(?=@counter-style([\s'"{;]|/\*|$))
+        end: (?<=})(?!\G)
+        patterns:
+          - begin: (?i)\G(@)counter-style
+            beginCaptures:
+              '0':
+                name: keyword.control.at-rule.counter-style.less
+              '1':
+                name: punctuation.definition.keyword.less
+            end: (?=\s*{)
+            name: meta.at-rule.counter-style.header.less
+            patterns:
+              - include: '#comment-block'
+              - include: '#escapes'
+              - captures:
+                  '0':
+                    patterns:
+                      - include: '#escapes'
+                match: |-
+                  (?x)
+                  (?:[-a-zA-Z_]    | [^\x00-\x7F])     # First letter
+                  (?:[-a-zA-Z0-9_] | [^\x00-\x7F]      # Remainder of identifier
+                    |\\(?:[0-9a-fA-F]{1,6}|.)
+                  )*
+                name: variable.parameter.style-name.less
+          - begin: '{'
+            beginCaptures:
+              '0':
+                name: punctuation.section.property-list.begin.bracket.curly.less
+            end: '}'
+            endCaptures:
+              '0':
+                name: punctuation.section.property-list.end.bracket.curly.less
+            name: meta.at-rule.counter-style.body.less
+            patterns:
+              - include: '#comment-block'
+              - include: '#comment-line'
+              - include: '#escapes'
+              - include: '#rule-list-innards'
       - begin: (?i)((@)font-face)(?=\s*|{|/\*|$)
         beginCaptures:
           '1':
@@ -232,16 +271,16 @@ repository:
           - include: '#comment-block'
           - include: '#escapes'
           - include: '#string'
-      - begin: ^\s*((@)page)(?=:|\s)\s*([-:\w]*)
+      - begin: (?i)(@)page(?=[\s:{]|/\*|$)
         captures:
-          '1':
+          '0':
             name: keyword.control.at-rule.page.less
-          '2':
+          '1':
             name: punctuation.definition.keyword.less
-          '3':
-            name: entity.name.function.less
-        end: \s*(?={)
+        end: (?=\s*($|[:{;]))
         name: meta.at-rule.page.less
+        patterns:
+          - include: '#rule-list'
       - begin: ^\s*((@)plugin)(?:\s+|$|(?=['"]))
         beginCaptures:
           '1':
