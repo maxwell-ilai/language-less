@@ -55,6 +55,7 @@ repository:
             patterns:
               - include: '#comment-block'
               - include: '#escapes'
+              - include: '#variables'
               - captures:
                   '0':
                     patterns:
@@ -179,52 +180,30 @@ repository:
 
                   ([-+]?(?:\d+(?:\.\d+)?|\.\d+)%)        # Percentile value
               - include: '#rule-list'
-      - begin: ^\s*((@)media)\b
-        beginCaptures:
-          '1':
-            name: keyword.control.at-rule.media.less
-          '2':
-            name: punctuation.definition.keyword.less
-        end: \s*(?={)
-        name: meta.at-rule.media.less
+      - begin: (?i)(?=@media(\s|\(|/\*|$))
+        end: (?<=})(?!\G)
         patterns:
-          - include: '#comment-block'
-          - include: '#comment-line'
-          - match: \b(only)\b
-            name: keyword.control.operator.css.less
-          - begin: \(
+          - begin: (?i)\G(@)media
             beginCaptures:
               '0':
-                name: punctuation.definition.media-query.begin.bracket.round.less
-            end: \)
+                name: keyword.control.at-rule.media.less
+              '1':
+                name: punctuation.definition.keyword.less
+            end: (?=\s*[{;])
+            name: meta.at-rule.media.header.less
+            patterns:
+              - include: '#media-query-list'
+          - begin: '{'
+            beginCaptures:
+              '0':
+                name: punctuation.section.media.begin.bracket.curly.less
+            end: '}'
             endCaptures:
               '0':
-                name: punctuation.definition.media-query.end.bracket.round.less
-            name: meta.property-list.media-query.less
+                name: punctuation.section.media.end.bracket.curly.less
+            name: meta.at-rule.media.body.less
             patterns:
-              - begin: (?<![-a-z])(?=[-a-z])
-                end: $|(?![-a-z])
-                name: meta.property-name.media-query.less
-                patterns:
-                  - include: source.css#media-features
-                  - include: source.css#property-names
-              - begin: (:)\s*(?!(\s*{))
-                beginCaptures:
-                  '1':
-                    name: punctuation.separator.key-value.less
-                end: \s*(;|(?=}|\)))
-                endCaptures:
-                  '1':
-                    name: punctuation.terminator.rule.less
-                contentName: meta.property-value.media-query.less
-                patterns:
-                  - include: '#variable'
-                  - include: '#comment-block'
-                  - include: '#comment-line'
-                  - include: '#property-values'
-          - include: '#variable'
-          - include: '#conditional-operators'
-          - include: source.css#media-types
+              - include: $self
       - begin: (?i)((@)namespace)(?=[\s'";]|/\*|$)
         beginCaptures:
           '1':
@@ -472,6 +451,52 @@ repository:
       - include: '#map'
       - include: '#variable'
       - include: '#property-values'
+  media-query:
+    begin: \G
+    end: (?=\s*[{;])
+    patterns:
+      - include: '#comment-block'
+      - include: '#escapes'
+      - include: 'source.css#media-types'
+      - match: (?i)(?<=\s|^|,|\*/)(only|not)(?=\s|{|/\*|$)
+        name: keyword.operator.logical.$1.media.less
+      - match: (?i)(?<=\s|^|\*/|\))and(?=\s|/\*|$)
+        name: keyword.operator.logical.and.media.less
+      - match: ',(?:(?:\s*,)+|(?=\s*[;){]))'
+        name: invalid.illegal.comma.less
+      - include: '#commas'
+      - begin: \(
+        beginCaptures:
+          '0':
+            name: punctuation.definition.parameters.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.parameters.end.bracket.round.less
+        patterns:
+          - include: 'source.css#media-features'
+          - include: 'source.css#media-feature-keywords'
+          - match: ':'
+            name: punctuation.separator.key-value.less
+          - match: '>=|<=|=|<|>'
+            name: keyword.operator.comparison.less
+          - captures:
+              '1':
+                name: constant.numeric.less
+              '2':
+                name: keyword.operator.arithmetic.less
+              '3':
+                name: constant.numeric.less
+            match: (\d+)\s*(/)\s*(\d+)
+            name: meta.ratio.less
+          - include: '#variable'
+          - include: 'source.css#numeric-values'
+          - include: '#comment-block'
+  media-query-list:
+    begin: (?=\s*[^{;])
+    end: (?=\s*[{;])
+    patterns:
+      - include: '#media-query'
   mixin-definition:
     begin: ([.#][-a-zA-Z0-9_]+)(?=\()
     beginCaptures:
