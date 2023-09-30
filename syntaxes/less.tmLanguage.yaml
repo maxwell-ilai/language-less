@@ -854,10 +854,8 @@ repository:
         patterns:
           - match: (?i)all
             name: support.constant.extend-all.less
-          - include: '#combinators'
-          - include: '#selector'
-          - include: '#commas'
           - include: '#variable'
+          - include: '#selector-innards'
       - begin: (?i)((:)nth-(?:last-)?(?:child|of-type))(\()
         beginCaptures:
           '1':
