@@ -360,6 +360,66 @@ repository:
         patterns:
           - include: '#comparison-operators'
           - include: '#property-values'
+      - begin: (?i)(?<![\w-])(calc)(\()
+        beginCaptures:
+          '1':
+            name: support.function.calc.less
+          '2':
+            name: punctuation.section.function.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.section.function.end.bracket.round.less
+        name: meta.function.calc.less
+        patterns:
+          - match: '[*/]|(?<=\s|^)[-+](?=\s|$)'
+            name: keyword.operator.arithmetic.less
+          - include: '#property-values'
+      - begin: |-
+          (?xi) (?<![\w-])
+          (
+            (?:-webkit-|-moz-|-o-)?        # Accept prefixed/historical variants
+            (?:repeating-)?                # "Repeating"-type gradient
+            (?:linear|radial|conic|svg)    # Shape | SVG
+            -gradient
+          )
+          (\()
+        beginCaptures:
+          '1':
+            name: support.function.gradient.less
+          '2':
+            name: punctuation.section.function.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.section.function.end.bracket.round.less
+        name: meta.function.gradient.less
+        patterns:
+          - match: (?i)(?<![\w-])(from|to|at)(?![\w-])
+            name: keyword.operator.gradient.less
+          - include: '#property-values'
+      - include: '#url'
+      - begin: (?i)(?<![\w-])(var)(\()
+        beginCaptures:
+          '1':
+            name: support.function.misc.less
+          '2':
+            name: punctuation.section.function.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.section.function.end.bracket.round.less
+        name: meta.function.variable.less
+        patterns:
+          - name: variable.argument.less
+            match: |-
+              (?x)
+              --
+              (?:[-a-zA-Z_]    | [^\x00-\x7F])     # First letter
+              (?:[-a-zA-Z0-9_] | [^\x00-\x7F]      # Remainder of identifier
+                |\\(?:[0-9a-fA-F]{1,6}|.)
+              )*
+          - include: '#property-values'
       - begin: |-
           (?x) (?<![\w-])
           (
@@ -385,7 +445,6 @@ repository:
             name: punctuation.section.function.end.bracket.round.less
         name: meta.function.built-in.less
         patterns:
-          - include: '#comparison-operators'
           - include: '#property-values'
       - begin: (?i)(?<![\w-])([\w-]+)(\()
         beginCaptures:
@@ -539,6 +598,35 @@ repository:
   operators:
     match: '[*/]|(?<=\s|^)[-+](?=\s|$)'
     name: keyword.operator.arithmetic.less
+  property-values:
+    patterns:
+      - include: '#variable'
+      - include: '#commas'
+      - include: '#comment-block'
+      - include: '#escapes'
+      - include: '#rule-mixin'
+      - include: '#functions'
+      - include: source.css#property-keywords
+      - include: source.css#unicode-range
+      - include: source.css#numeric-values
+      - include: source.css#color-keywords
+      - include: '#string'
+      - match: '!\s*important(?![\w-])'
+        name: keyword.other.important.less
+      - begin: \(
+        beginCaptures:
+          '0':
+            name: punctuation.definition.begin.bracket.round.less
+        end: \)
+        endCaptures:
+          '0':
+            name: punctuation.definition.end.bracket.round.less
+        patterns:
+          - match: \b(true|false)\b
+            name: support.constant.boolean.less
+          - include: '#operators'
+          - include: '#conditional-operators'
+          - include: '#property-values'
   rule-list:
     begin: '{'
     beginCaptures:
@@ -590,35 +678,6 @@ repository:
           - include: '#property-values'
       - match: ;
         name: punctuation.terminator.rule.less
-  property-values:
-    patterns:
-      - include: '#variable'
-      - include: '#commas'
-      - include: '#comment-block'
-      - include: '#escapes'
-      - include: '#rule-mixin'
-      - include: '#functions'
-      - include: source.css#property-keywords
-      - include: source.css#unicode-range
-      - include: source.css#numeric-values
-      - include: source.css#color-keywords
-      - include: '#string'
-      - match: '!\s*important(?![\w-])'
-        name: keyword.other.important.less
-      - begin: \(
-        beginCaptures:
-          '0':
-            name: punctuation.definition.begin.bracket.round.less
-        end: \)
-        endCaptures:
-          '0':
-            name: punctuation.definition.end.bracket.round.less
-        patterns:
-          - match: \b(true|false)\b
-            name: support.constant.boolean.less
-          - include: '#operators'
-          - include: '#conditional-operators'
-          - include: '#property-values'
   rule-each:
     begin: (?<![@\w-])(each)(\()
     beginCaptures:
