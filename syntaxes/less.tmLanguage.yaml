@@ -203,7 +203,11 @@ repository:
                 name: punctuation.section.media.end.bracket.curly.less
             name: meta.at-rule.media.body.less
             patterns:
-              - include: $self
+              - include: '#rule-each'
+              - include: '#combinators'
+              - include: '#inner-selector'
+              - include: '#rule-list-innards'
+              - include: '$self'
       - begin: (?i)((@)namespace)(?=[\s'";]|/\*|$)
         beginCaptures:
           '1':
