@@ -10,8 +10,9 @@
   "engines": {
     "vscode": "^1.82.0"
   },
+  "homepage": "https://github.com/maxwell-ilai/language-less",
   "repository": {
-    "url": "https://github.com/maxwell-ilai/language-less"
+    "url": "https://github.com/maxwell-ilai/language-less.git"
   },
   "categories": [
     "Programming Languages"
