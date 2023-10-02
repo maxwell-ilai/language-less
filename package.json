@@ -1,7 +1,7 @@
 {
   "name": "language-less",
   "displayName": "Language Less",
-  "description": "Less Language Support",
+  "description": "Less Language advanced syntax highlight.",
   "version": "0.0.1",
   "publisher": "MaxwellBento",
   "author": {
