@@ -14,6 +14,7 @@
   "repository": {
     "url": "https://github.com/maxwell-ilai/language-less.git"
   },
+  "icon": "./assets/less-logo-bw.png",
   "categories": [
     "Programming Languages"
   ],
